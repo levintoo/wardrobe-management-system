@@ -13,8 +13,6 @@ return new class extends Migration {
             $table->string('name');
             $table->text('description')->nullable();
             $table->foreignIdFor(Category::class);
-            $table->string('size')->nullable();
-            $table->unsignedInteger('price')->nullable();
             $table->string('image_path')->nullable();
             $table->timestamps();
             $table->softDeletes();

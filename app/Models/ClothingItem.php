@@ -16,8 +16,6 @@ class ClothingItem extends Model
         'name',
         'description',
         'category_id',
-        'size',
-        'price',
         'image_path',
     ];
 

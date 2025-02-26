@@ -19,20 +19,25 @@ import PrimaryButton from "@/Components/PrimaryButton.vue";
 import SearchIcon from "@/Components/icons/SearchIcon.vue";
 import IconLink from "@/Components/IconLink.vue";
 import EditIcon from "@/Components/icons/EditIcon.vue";
+import SelectInput from "@/Components/SelectInput.vue";
 
 const props = defineProps({
-    categories: {
+    clothing: {
         type: Object,
     },
     filters: {
         type: Object,
     },
+    categories: {
+        type: Object,
+    }
 });
 
 const params = ref({
     search: props.filters.search ?? '',
     field: props.filters.field ?? '',
     direction: props.filters.direction ?? '',
+    category: props.filters.category ?? '',
 });
 
 const sort = (field) => {
@@ -44,7 +49,7 @@ watch(
     params.value,
     debounce((params) => {
         router.get(
-            '/categories',
+            '/clothing',
             { ...omitBy(params, (v) => v === '') },
             { preserveScroll: true, replace: true, preserveState: true },
         );
@@ -55,6 +60,7 @@ const resetFilters = () => {
     params.value.search = '';
     params.value.field = '';
     params.value.direction = '';
+    params.value.category = '';
 };
 
 const handleDelete = (id) => {
@@ -64,7 +70,7 @@ const handleDelete = (id) => {
         )
     )
         return;
-    router.delete('/category/' + id, {
+    router.delete('/clothing/' + id, {
         preserveScroll: true,
         onError: () => {
             toast('Something went wrong, failed to remove category');
@@ -78,11 +84,11 @@ const handleDelete = (id) => {
 
 <template>
     <AuthenticatedLayout>
-        <Head title="Categories" />
+        <Head title="clothing" />
 
         <template #header>
             <h2 class="text-xl font-semibold leading-tight text-gray-800">
-                Categories
+                clothing
             </h2>
         </template>
 
@@ -92,17 +98,37 @@ const handleDelete = (id) => {
                     <div
                         class="flex flex-col gap-4 md:flex-row md:justify-between"
                     >
-                        <div class="space-y-1 relative">
-                            <div class="absolute inset-y-0 left-3 flex items-center">
-                                <SearchIcon class="w-4 h-4 text-gray-500" />
+                        <div class="space-y-1 flex flex-col md:flex-row gap-2">
+                            <div class="space-y-1 relative">
+                                <div class="absolute inset-y-0 left-3 flex items-center">
+                                    <SearchIcon class="w-4 h-4 text-gray-500" />
+                                </div>
+                                <TextInput
+                                    placeholder="search here..."
+                                    id="search"
+                                    v-model="params.search"
+                                    type="text"
+                                    class="w-full px-3 py-2 text-sm pl-9 rounded-lg"
+                                />
                             </div>
-                            <TextInput
-                                placeholder="search here..."
-                                id="search"
-                                v-model="params.search"
-                                type="text"
-                                class="w-full px-3 py-2 text-sm pl-9 rounded-lg"
-                            />
+
+                            <div>
+                                <SelectInput
+                                    placeholder="select category"
+                                    id="name"
+                                    class="w-full min-w-48 px-3 py-2 text-sm rounded-lg"
+                                    v-model="params.category"
+                                    autofocus
+                                    autocomplete="category_id"
+                                >
+                                    <option selected value="">
+                                        select category
+                                    </option>
+                                    <option v-for="category in categories" :key="category.id" :value="category.id">
+                                        {{ category.name }}
+                                    </option>
+                                </SelectInput>
+                            </div>
                         </div>
 
                         <div class="flex items-end gap-3 space-y-1">
@@ -113,11 +139,11 @@ const handleDelete = (id) => {
                                 Reset Filters
                             </SecondaryButton>
 
-                            <Link :href="route('category.create')">
+                            <Link :href="route('clothing.create')">
                                 <PrimaryButton
                                     class="rounded-md px-4 py-2 text-sm font-medium"
                                 >
-                                    New Category
+                                    New Clothing
                                 </PrimaryButton>
                             </Link>
                         </div>
@@ -134,11 +160,7 @@ const handleDelete = (id) => {
                                 :params="params"
                                 @click="sort('name')"
                             />
-
-                            <TableHeadItem
-                                field="clothing"
-                            />
-
+                            <TableHeadItem field="Category" />
                             <TableHeadItem
                                 class="cursor-pointer"
                                 field="created_at"
@@ -156,25 +178,30 @@ const handleDelete = (id) => {
                     <template #tbody>
                         <TableBody
                             class="whitespace-nowrap"
-                            v-if="categories.data.length > 0"
+                            v-if="clothing.data.length > 0"
                         >
                             <TableBodyItem
-                                v-for="category in categories.data"
-                                :key="category.id"
+                                v-for="clothingitem in clothing.data"
+                                :key="clothingitem.id"
                             >
-                                <TableData>{{ category.id }}</TableData>
-                                <TableData>{{
-                                    category.name ?? '-'
+                                <TableData>{{ clothingitem.id }}</TableData>
+                                <TableData :title="clothingitem.description">
+                                    <img class="h-20 w-auto min-w-28 object-cover rounded-lg" v-if="clothingitem.image_path" :src="clothingitem.image_path" :alt="`${clothingitem.name} image`" />
+
+                                    <span v-else>-</span>
+                                </TableData>
+                                <TableData :title="clothingitem.description">{{
+                                        clothingitem.name ?? '-'
                                 }}</TableData>
                                 <TableData>{{
-                                        category.clothing_items_count ?? '-'
+                                        clothingitem.category ?? '-'
+                                }}</TableData>
+                                <TableData>{{
+                                        clothingitem.created_at ?? '-'
                                     }}</TableData>
-                                <TableData>{{
-                                    category.created_at ?? '-'
-                                }}</TableData>
                                 <TableData>
                                     <IconButton
-                                        @click="handleDelete(category.id)"
+                                        @click="handleDelete(clothingitem.id)"
                                         class="text-red-500 focus:ring-red-300"
                                     >
                                         Delete
@@ -182,7 +209,7 @@ const handleDelete = (id) => {
                                     </IconButton>
 
                                     <IconLink
-                                        :href="route('category.edit', category.id)"
+                                        :href="route('clothing.edit', clothingitem.id)"
                                         class="text-gray-500 focus:ring-gray-300"
                                     >
                                         Edit
@@ -202,11 +229,11 @@ const handleDelete = (id) => {
                     </template>
                     <template #pagination>
                         <Pagination
-                            v-if="categories.links"
-                            :from="categories.from"
-                            :to="categories.to"
-                            :total="categories.total"
-                            :links="categories.links"
+                            v-if="clothing.links"
+                            :from="clothing.from"
+                            :to="clothing.to"
+                            :total="clothing.total"
+                            :links="clothing.links"
                         />
                     </template>
                 </Table>

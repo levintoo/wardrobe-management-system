@@ -31,10 +31,11 @@ class CategoryController extends Controller
             );
         }
 
-        $categories = $query->select(['name', 'id', 'created_at'])->paginate()->through(fn ($category) => [
+        $categories = $query->select(['name', 'id', 'created_at', 'clothingItems_count'])->withCount('clothingItems')->paginate()->through(fn ($category) => [
             'id' => $category->id,
             'name' => $category->name,
             'created_at' => $category->created_at->diffForHumans(),
+            'clothing_items_count' => $category->clothing_items_count,
         ]);
 
         $filters = request()->all(['field', 'search', 'direction']);

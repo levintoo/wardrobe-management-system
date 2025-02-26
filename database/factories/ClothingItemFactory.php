@@ -14,11 +14,8 @@ class ClothingItemFactory extends Factory
     public function definition(): array
     {
         return [
-            'name' => fake()->name(),
-            'description' => fake()->text(),
-            'size' => fake()->word(),
-            'price' => fake()->word(),
-            'image_path' => fake()->word(),
+            'name' => fake()->word(),
+            'description' => fake()->realText(),
             'created_at' => Carbon::now(),
             'updated_at' => Carbon::now(),
 
