@@ -3,39 +3,71 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\CategoryRequest;
-use App\Http\Resources\CategoryResource;
 use App\Models\Category;
 
 class CategoryController extends Controller
 {
     public function index()
     {
-        $categories = CategoryResource::collection(Category::paginate());
+        request()->validate([
+            'direction' => 'in:desc,asc',
+            'field' => 'in:name,created_at',
+            'search' => 'max:25'
+        ]);
 
-        return inertia('Category/Edit', compact('categories'));
+        $query = Category::query();
+
+        if(request('search')) {
+            $query->where('name','LIKE','%'.request('search').'%');
+        }
+
+        if(request('field')) {
+            $query->orderBy(
+                request('field'), request('direction')
+            );
+        } else {
+            $query->orderBy(
+                'created_at','DESC'
+            );
+        }
+
+        $categories = $query->select(['name', 'id', 'created_at'])->paginate()->through(fn ($category) => [
+            'id' => $category->id,
+            'name' => $category->name,
+            'created_at' => $category->created_at->diffForHumans(),
+        ]);
+
+        $filters = request()->all(['field', 'search', 'direction']);
+
+        return inertia('Category/Index', compact('categories', 'filters'));
+    }
+
+    public function create()
+    {
+        return inertia('Category/Create');
     }
 
     public function store(CategoryRequest $request)
     {
-        return new CategoryResource(Category::create($request->validated()));
+        Category::create($request->validated());
+
+        return redirect()->route('category.index');
     }
 
     public function show(Category $category)
     {
-        return new CategoryResource($category);
+        return inertia('Category/Edit', compact('category'));
     }
 
     public function update(CategoryRequest $request, Category $category)
     {
         $category->update($request->validated());
 
-        return new CategoryResource($category);
+        return redirect()->route('category.index');
     }
 
     public function destroy(Category $category)
     {
         $category->delete();
-
-        return response()->json();
     }
 }
