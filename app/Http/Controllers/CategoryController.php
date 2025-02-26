@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\CategoryRequest;
 use App\Models\Category;
+use Illuminate\Support\Facades\File;
 
 class CategoryController extends Controller
 {
@@ -12,22 +13,22 @@ class CategoryController extends Controller
         request()->validate([
             'direction' => 'in:desc,asc',
             'field' => 'in:name,created_at',
-            'search' => 'max:25'
+            'search' => 'max:25',
         ]);
 
         $query = Category::query();
 
-        if(request('search')) {
-            $query->where('name','LIKE','%'.request('search').'%');
+        if (request('search')) {
+            $query->where('name', 'LIKE', '%'.request('search').'%');
         }
 
-        if(request('field')) {
+        if (request('field')) {
             $query->orderBy(
                 request('field'), request('direction')
             );
         } else {
             $query->orderBy(
-                'created_at','DESC'
+                'created_at', 'DESC'
             );
         }
 
@@ -69,6 +70,15 @@ class CategoryController extends Controller
 
     public function destroy(Category $category)
     {
+        $category->clothingItems()->chunk(100, function ($items) {
+            foreach ($items as $item) {
+                if ($item->image_path && File::exists(public_path($item->image_path))) {
+                    File::delete(public_path($item->image_path));
+                }
+            }
+        });
+
+        $category->clothingItems()->delete();
         $category->delete();
     }
 }

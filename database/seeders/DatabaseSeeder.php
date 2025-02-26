@@ -20,10 +20,31 @@ class DatabaseSeeder extends Seeder
             'email' => 'test@example.com',
         ]);
 
-        Category::factory()->create(['name' => 'Tops']);
-        Category::factory()->create(['name' => 'Bottoms']);
-        Category::factory()->create(['name' => 'Shoes']);
+        $categories = [
+            'Tops',
+            'Bottoms',
+            'Footwear',
+        ];
 
-//        ClothingItem::factory(10)->create();
+        foreach ($categories as $category) {
+            Category::factory()->create(['name' => $category]);
+        }
+
+        $categoryIds = Category::pluck('id', 'name')->toArray();
+
+        $clothingItems = [
+            'Tops' => ['T-shirt', 'Hoodie', 'Blouse', 'Sweater', 'Tank Top', 'Polo Shirt', 'Cardigan'],
+            'Bottoms' => ['Jeans', 'Shorts', 'Skirt', 'Trousers', 'Leggings', 'Joggers', 'Cargo Pants'],
+            'Footwear' => ['Sneakers', 'Boots', 'Sandals', 'Loafers', 'Flip Flops', 'Heels', 'Running Shoes'],
+        ];
+
+        foreach (range(1, 16) as $index) {
+            $categoryName = array_rand($clothingItems);
+            ClothingItem::factory()->create([
+                'category_id' => $categoryIds[$categoryName],
+                'name' => fake()->randomElement($clothingItems[$categoryName]),
+                'description' => fake()->sentence(),
+            ]);
+        }
     }
 }

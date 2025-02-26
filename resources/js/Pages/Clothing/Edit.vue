@@ -26,13 +26,14 @@ const form = useForm({
 });
 
 const handleSubmit = () => {
-    form.post('/clothing/create', {
+    form.post('/clothing/'+props.clothingItem.id, {
         preserveScroll: true,
         onError: () => {
-            toast('something went wrong')
+            toast.error('something went wrong')
         },
     })
 }
+
 </script>
 
 <template>
@@ -74,7 +75,6 @@ const handleSubmit = () => {
                                         id="name"
                                         class="mt-1 block w-full"
                                         v-model="form.category_id"
-                                        autofocus
                                         autocomplete="category_id"
                                     >
                                         <option v-for="category in categories" :key="category.id" :value="category.id">
@@ -93,7 +93,6 @@ const handleSubmit = () => {
                                         type="text"
                                         class="mt-1 block w-full"
                                         v-model="form.description"
-                                        autofocus
                                         autocomplete="description"
                                     />
 
@@ -111,7 +110,6 @@ const handleSubmit = () => {
                                         id="name"
                                         type="file"
                                         class="mt-1 block w-full"
-                                        autofocus
                                         autocomplete="image"
                                         @input="form.image = $event.target.files[0]"
                                     />

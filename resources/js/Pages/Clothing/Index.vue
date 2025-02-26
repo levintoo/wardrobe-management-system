@@ -84,11 +84,11 @@ const handleDelete = (id) => {
 
 <template>
     <AuthenticatedLayout>
-        <Head title="clothing" />
+        <Head title="Clothing" />
 
         <template #header>
             <h2 class="text-xl font-semibold leading-tight text-gray-800">
-                clothing
+                Clothing
             </h2>
         </template>
 
@@ -154,6 +154,7 @@ const handleDelete = (id) => {
                     <template #thead>
                         <TableHead>
                             <TableHeadItem field="id" />
+                            <TableHeadItem field="image" />
                             <TableHeadItem
                                 class="cursor-pointer"
                                 field="name"

@@ -3,7 +3,6 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\ClothingItemRequest;
-use App\Http\Resources\ClothingItemResource;
 use App\Models\Category;
 use App\Models\ClothingItem;
 use Illuminate\Support\Facades\File;
@@ -16,7 +15,7 @@ class ClothingItemController extends Controller
             'direction' => 'in:desc,asc',
             'field' => 'in:name,created_at',
             'category' => 'exists:categories,id',
-            'search' => 'max:25'
+            'search' => 'max:25',
         ]);
 
         $query = ClothingItem::query();
@@ -27,21 +26,21 @@ class ClothingItemController extends Controller
 
         if (request('search')) {
             $query->where(function ($q) {
-                $q->where('name', 'LIKE', '%' . request('search') . '%')
-                    ->orWhere('description', 'LIKE', '%' . request('search') . '%')
-                    ->orWhere('category_id', 'LIKE', '%' . request('search') . '%')
-                    ->orWhere('size', 'LIKE', '%' . request('search') . '%')
-                    ->orWhere('price', 'LIKE', '%' . request('search') . '%');
+                $q->where('name', 'LIKE', '%'.request('search').'%')
+                    ->orWhere('description', 'LIKE', '%'.request('search').'%')
+                    ->orWhere('category_id', 'LIKE', '%'.request('search').'%')
+                    ->orWhere('size', 'LIKE', '%'.request('search').'%')
+                    ->orWhere('price', 'LIKE', '%'.request('search').'%');
             });
         }
 
-        if(request('field')) {
+        if (request('field')) {
             $query->orderBy(
                 request('field'), request('direction')
             );
         } else {
             $query->orderBy(
-                'created_at','DESC'
+                'created_at', 'DESC'
             );
         }
 
@@ -58,7 +57,7 @@ class ClothingItemController extends Controller
             'created_at',
         ]);
 
-        $clothing = $query->paginate()->through(fn($clothingitem) => [
+        $clothing = $query->paginate()->through(fn ($clothingitem) => [
             'id' => $clothingitem->id,
             'name' => $clothingitem->name,
             'description' => $clothingitem->description,
@@ -77,12 +76,18 @@ class ClothingItemController extends Controller
     public function create()
     {
         $categories = Category::query()->select(['id', 'name'])->get();
+
         return inertia('Clothing/Create', compact('categories'));
     }
 
     public function store(ClothingItemRequest $request)
     {
-        $filePath = $request->file('image')?->move( time() . '.' . $request->file('image')->getClientOriginalExtension());
+        if($request->file('image')) {
+        $filePath = $request->file('image')->move(
+            'uploads',
+            time().'.'.$request->file('image')->getClientOriginalExtension()
+        );
+        }
 
         ClothingItem::create([
             ...$request->validated(),
@@ -110,7 +115,7 @@ class ClothingItemController extends Controller
 
             $filePath = $request->file('image')->move(
                 'uploads',
-                time() . '.' . $request->file('image')->getClientOriginalExtension()
+                time().'.'.$request->file('image')->getClientOriginalExtension()
             );
         }
 
@@ -124,6 +129,10 @@ class ClothingItemController extends Controller
 
     public function destroy(ClothingItem $clothingItem)
     {
+        if ($clothingItem->image_path && File::exists(public_path($clothingItem->image_path))) {
+            File::delete(public_path($clothingItem->image_path));
+        }
+
         $clothingItem->delete();
 
         return redirect()->route('clothing.index');
